@@ -55,7 +55,7 @@ function Sidebar() {
                     `flex items-center gap-3 rounded-lg px-4 py-3 transition ${
                       isActive
                         ? "bg-blue-600 text-white"
-                        : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                        : "text-slate-300 hover:bg-slate-800 hover:text-white hover:scale-105 transition-transform duration-300"
                     }`
                   }
                 >

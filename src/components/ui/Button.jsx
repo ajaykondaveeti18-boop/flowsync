@@ -4,6 +4,7 @@ function Button({
   type = "button",
   variant = "primary",
   className = "",
+  disabled = false,
 }) {
   const styles = {
     primary: "bg-blue-600 text-white hover:bg-blue-700",
@@ -15,7 +16,8 @@ function Button({
     <button
       type={type}
       onClick={onClick}
-      className={`inline-flex items-center justify-center rounded-lg px-4 py-2 font-medium transition ${styles[variant]} ${className}`}
+      disabled={disabled}
+      className={`inline-flex items-center justify-center rounded-lg px-4 py-2 font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${styles[variant]} ${className}`}
     >
       {children}
     </button>
