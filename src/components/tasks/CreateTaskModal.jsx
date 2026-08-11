@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
 
+import Button from "../ui/Button";
+import Input from "../ui/Input";
+import Select from "../ui/Select";
+
 function CreateTaskModal({
   open,
   onClose,
   onCreate,
   editingTask,
+  projects,
 }) {
   const [form, setForm] = useState({
     title: "",
-    project: "",
+    project_id: "",
     status: "Pending",
   });
 
@@ -16,13 +21,13 @@ function CreateTaskModal({
     if (editingTask) {
       setForm({
         title: editingTask.title,
-        project: editingTask.project,
+        project_id: editingTask.project_id || "",
         status: editingTask.status,
       });
     } else {
       setForm({
         title: "",
-        project: "",
+        project_id: "",
         status: "Pending",
       });
     }
@@ -41,9 +46,32 @@ function CreateTaskModal({
     e.preventDefault();
 
     if (!form.title.trim()) return;
+    if (!form.project_id) return;
 
     onCreate(form);
   };
+
+  const projectOptions = [
+    {
+      value: "",
+      label: "Select Project",
+    },
+    ...projects.map((project) => ({
+      value: project.id,
+      label: project.name,
+    })),
+  ];
+
+  const statusOptions = [
+    {
+      value: "Pending",
+      label: "Pending",
+    },
+    {
+      value: "Completed",
+      label: "Completed",
+    },
+  ];
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/40">
@@ -56,49 +84,39 @@ function CreateTaskModal({
           onSubmit={handleSubmit}
           className="space-y-4"
         >
-          <input
+          <Input
             type="text"
             name="title"
             placeholder="Task Title"
             value={form.title}
             onChange={handleChange}
-            className="w-full rounded-lg border p-3"
           />
 
-          <input
-            type="text"
-            name="project"
-            placeholder="Project Name"
-            value={form.project}
+          <Select
+            name="project_id"
+            value={form.project_id}
             onChange={handleChange}
-            className="w-full rounded-lg border p-3"
+            options={projectOptions}
           />
 
-          <select
+          <Select
             name="status"
             value={form.status}
             onChange={handleChange}
-            className="w-full rounded-lg border p-3"
-          >
-            <option>Pending</option>
-            <option>Completed</option>
-          </select>
+            options={statusOptions}
+          />
 
           <div className="flex justify-end gap-3">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={onClose}
-              className="rounded-lg border px-4 py-2"
             >
               Cancel
-            </button>
+            </Button>
 
-            <button
-              type="submit"
-              className="rounded-lg bg-blue-600 px-4 py-2 text-white"
-            >
+            <Button type="submit">
               {editingTask ? "Update" : "Create"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

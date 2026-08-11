@@ -1,10 +1,21 @@
 import { CheckCircle2, Circle, Pencil, Trash2 } from "lucide-react";
 
+import Button from "../ui/Button";
+
 function TaskCard({ task, onToggle, onEdit, onDelete }) {
   return (
     <div className="flex items-center justify-between rounded-xl border bg-white p-5 shadow-sm">
       <div className="flex items-center gap-4">
-        <button onClick={() => onToggle(task.id)}>
+        <button
+          type="button"
+          onClick={() => onToggle(task.id)}
+          className="rounded-full"
+          aria-label={
+            task.status === "Completed"
+              ? "Mark task as pending"
+              : "Mark task as completed"
+          }
+        >
           {task.status === "Completed" ? (
             <CheckCircle2 className="text-green-600" />
           ) : (
@@ -24,25 +35,27 @@ function TaskCard({ task, onToggle, onEdit, onDelete }) {
           </h3>
 
           <p className="text-sm text-slate-500">
-            {task.project}
+            {task.projects?.name || "No project"}
           </p>
         </div>
       </div>
 
       <div className="flex gap-2">
-        <button
+        <Button
+          variant="icon"
           onClick={() => onEdit(task)}
-          className="rounded-lg p-2 hover:bg-slate-100"
+          aria-label="Edit task"
         >
           <Pencil size={18} />
-        </button>
+        </Button>
 
-        <button
+        <Button
+          variant="iconDanger"
           onClick={() => onDelete(task.id)}
-          className="rounded-lg p-2 text-red-500 hover:bg-red-100"
+          aria-label="Delete task"
         >
           <Trash2 size={18} />
-        </button>
+        </Button>
       </div>
     </div>
   );
