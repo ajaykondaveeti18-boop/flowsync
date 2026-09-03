@@ -1,49 +1,38 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-import { supabase } from "../../lib/supabase";
+import { getCurrentUser } from "../../services/auth";
 
-function ProtectedRoute() {
-  const [session, setSession] = useState(null);
+function ProtectedRoute({ children }) {
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    async function checkUser() {
+      const currentUser = await getCurrentUser();
 
-      setSession(session);
+      setUser(currentUser);
       setLoading(false);
-    };
+    }
 
-    getSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    checkUser();
   }, []);
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p>Loading...</p>
+        <p className="text-slate-500">
+          Checking authentication...
+        </p>
       </div>
     );
   }
 
-  if (!session) {
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  return <Outlet />;
+  return children;
 }
 
 export default ProtectedRoute;

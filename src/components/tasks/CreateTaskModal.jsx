@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import Button from "../ui/Button";
 import Input from "../ui/Input";
@@ -12,28 +12,10 @@ function CreateTaskModal({
   projects,
 }) {
   const [form, setForm] = useState({
-    title: "",
-    project_id: "",
-    status: "Pending",
+    title: editingTask?.title || "",
+    project_id: editingTask?.project_id || "",
+    status: editingTask?.status || "Pending",
   });
-
-  useEffect(() => {
-    if (editingTask) {
-      setForm({
-        title: editingTask.title,
-        project_id: editingTask.project_id || "",
-        status: editingTask.status,
-      });
-    } else {
-      setForm({
-        title: "",
-        project_id: "",
-        status: "Pending",
-      });
-    }
-  }, [editingTask]);
-
-  if (!open) return null;
 
   const handleChange = (e) => {
     setForm((prev) => ({
@@ -49,13 +31,28 @@ function CreateTaskModal({
     if (!form.project_id) return;
 
     onCreate(form);
+
+    setForm({
+      title: "",
+      project_id: "",
+      status: "Pending",
+    });
   };
 
+  const handleClose = () => {
+    setForm({
+      title: "",
+      project_id: "",
+      status: "Pending",
+    });
+
+    onClose();
+  };
+
+  if (!open) return null;
+
   const projectOptions = [
-    {
-      value: "",
-      label: "Select Project",
-    },
+    { value: "", label: "Select Project" },
     ...projects.map((project) => ({
       value: project.id,
       label: project.name,
@@ -63,27 +60,18 @@ function CreateTaskModal({
   ];
 
   const statusOptions = [
-    {
-      value: "Pending",
-      label: "Pending",
-    },
-    {
-      value: "Completed",
-      label: "Completed",
-    },
+    { value: "Pending", label: "Pending" },
+    { value: "Completed", label: "Completed" },
   ];
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-md rounded-xl bg-white p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
         <h2 className="mb-5 text-2xl font-bold">
           {editingTask ? "Edit Task" : "Create Task"}
         </h2>
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4"
-        >
+        <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             type="text"
             name="title"
@@ -108,8 +96,9 @@ function CreateTaskModal({
 
           <div className="flex justify-end gap-3">
             <Button
+              type="button"
               variant="secondary"
-              onClick={onClose}
+              onClick={handleClose}
             >
               Cancel
             </Button>

@@ -4,6 +4,7 @@ function Textarea({
   onChange,
   placeholder,
   rows = 4,
+  disabled = false,
 }) {
   return (
     <textarea
@@ -12,7 +13,8 @@ function Textarea({
       onChange={onChange}
       placeholder={placeholder}
       rows={rows}
-      className="w-full rounded-lg border border-slate-300 p-3 outline-none focus:border-blue-500"
+      disabled={disabled}
+      className="w-full resize-none rounded-lg border border-slate-300 p-3 outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
     />
   );
 }

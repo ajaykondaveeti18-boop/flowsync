@@ -4,6 +4,8 @@ import { supabase } from "../lib/supabase";
 
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
+import Modal from "../components/ui/Modal";
+import Textarea from "../components/ui/Textarea";
 
 function Notes() {
   const [notes, setNotes] = useState([]);
@@ -57,6 +59,7 @@ function Notes() {
     setEditingNote(null);
     setTitle("");
     setContent("");
+    setError("");
     setIsModalOpen(true);
   };
 
@@ -65,7 +68,16 @@ function Notes() {
     setEditingNote(note);
     setTitle(note.title);
     setContent(note.content || "");
+    setError("");
     setIsModalOpen(true);
+  };
+
+  // Close modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingNote(null);
+    setTitle("");
+    setContent("");
   };
 
   // Create or update note
@@ -135,10 +147,7 @@ function Notes() {
       setNotes((prev) => [data, ...prev]);
     }
 
-    setTitle("");
-    setContent("");
-    setEditingNote(null);
-    setIsModalOpen(false);
+    closeModal();
   };
 
   // Delete note
@@ -164,10 +173,19 @@ function Notes() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">
-          Notes
-        </h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">
+            Notes
+          </h1>
+
+          {!loading && (
+            <p className="mt-1 text-sm text-slate-500">
+              {notes.length}{" "}
+              {notes.length === 1 ? "note" : "notes"} in your workspace
+            </p>
+          )}
+        </div>
 
         <Button onClick={openCreateModal}>
           + New Note
@@ -183,37 +201,56 @@ function Notes() {
       />
 
       {/* Error */}
-      {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+      {error && !isModalOpen && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {error}
         </div>
       )}
 
       {/* Notes */}
       {loading ? (
-        <p className="text-slate-500">
-          Loading notes...
-        </p>
+        <div className="rounded-xl border bg-white p-8 text-center">
+          <p className="text-sm text-slate-500">
+            Loading notes...
+          </p>
+        </div>
       ) : filteredNotes.length === 0 ? (
-        <div className="rounded-xl border border-dashed p-8 text-center text-slate-500">
-          No notes found.
+        <div className="rounded-xl border border-dashed bg-white p-8 text-center">
+          <h2 className="text-lg font-semibold text-slate-800">
+            {search ? "No notes found" : "No notes yet"}
+          </h2>
+
+          <p className="mt-2 text-sm text-slate-500">
+            {search
+              ? "Try a different search term."
+              : "Create your first note to get started."}
+          </p>
+
+          {!search && (
+            <Button
+              className="mt-5"
+              onClick={openCreateModal}
+            >
+              + Create Note
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredNotes.map((note) => (
             <div
               key={note.id}
-              className="rounded-xl border bg-white p-5 shadow-sm"
+              className="flex min-h-[220px] flex-col rounded-xl border bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
             >
-              <h2 className="mb-2 text-xl font-semibold">
+              <h2 className="mb-2 break-words text-xl font-semibold">
                 {note.title}
               </h2>
 
-              <p className="mb-5 whitespace-pre-wrap text-sm text-slate-600">
-                {note.content}
+              <p className="mb-5 flex-1 whitespace-pre-wrap break-words text-sm text-slate-600">
+                {note.content || "No content"}
               </p>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-wrap justify-end gap-2">
                 <Button
                   variant="secondary"
                   onClick={() => openEditModal(note)}
@@ -234,54 +271,54 @@ function Notes() {
       )}
 
       {/* Create/Edit Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-xl bg-white p-6">
-            <h2 className="mb-5 text-2xl font-bold">
-              {editingNote ? "Edit Note" : "Create Note"}
-            </h2>
+      <Modal open={isModalOpen}>
+        <h2 className="mb-5 text-2xl font-bold">
+          {editingNote ? "Edit Note" : "Create Note"}
+        </h2>
 
-            <form
-              onSubmit={saveNote}
-              className="space-y-4"
-            >
-              <Input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Note Title"
-              />
-
-              <textarea
-                value={content}
-                onChange={(e) =>
-                  setContent(e.target.value)
-                }
-                placeholder="Write your note..."
-                rows={6}
-                className="w-full resize-none rounded-lg border border-slate-300 p-3 outline-none focus:border-blue-500"
-              />
-
-              <div className="flex justify-end gap-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    setEditingNote(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-
-                <Button type="submit">
-                  {editingNote ? "Update" : "Create"}
-                </Button>
-              </div>
-            </form>
+        {/* Modal Error */}
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+            {error}
           </div>
-        </div>
-      )}
+        )}
+
+        <form
+          onSubmit={saveNote}
+          className="space-y-4"
+        >
+          {/* Note Title */}
+          <Input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Note Title"
+          />
+
+          {/* Note Content */}
+          <Textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Write your note..."
+            rows={6}
+          />
+
+          {/* Actions */}
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={closeModal}
+            >
+              Cancel
+            </Button>
+
+            <Button type="submit">
+              {editingNote ? "Update" : "Create"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

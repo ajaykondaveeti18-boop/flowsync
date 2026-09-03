@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import { supabase } from "../lib/supabase";
 
 import TaskList from "../components/tasks/TaskList";
@@ -11,8 +10,10 @@ function Tasks() {
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [search, setSearch] = useState("");
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -20,7 +21,6 @@ function Tasks() {
     task.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Fetch tasks and projects
   useEffect(() => {
     async function loadData() {
       setLoading(true);
@@ -29,13 +29,7 @@ function Tasks() {
       const [tasksResult, projectsResult] = await Promise.all([
         supabase
           .from("tasks")
-          .select(`
-            *,
-            projects (
-              id,
-              name
-            )
-          `)
+          .select(`*, projects (id, name)`)
           .order("created_at", { ascending: false }),
 
         supabase
@@ -45,10 +39,7 @@ function Tasks() {
       ]);
 
       if (tasksResult.error) {
-        console.error(
-          "Error fetching tasks:",
-          tasksResult.error
-        );
+        console.error("Error fetching tasks:", tasksResult.error);
         setError("Unable to load tasks.");
         setLoading(false);
         return;
@@ -72,7 +63,6 @@ function Tasks() {
     loadData();
   }, []);
 
-  // Create or update task
   const saveTask = async (task) => {
     setError("");
 
@@ -85,20 +75,11 @@ function Tasks() {
           status: task.status,
         })
         .eq("id", editingTask.id)
-        .select(`
-          *,
-          projects (
-            id,
-            name
-          )
-        `)
+        .select(`*, projects (id, name)`)
         .single();
 
       if (error) {
-        console.error(
-          "Error updating task:",
-          error
-        );
+        console.error("Error updating task:", error);
         setError("Unable to update task.");
         return;
       }
@@ -114,9 +95,7 @@ function Tasks() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        setError(
-          "You must be logged in to create a task."
-        );
+        setError("You must be logged in to create a task.");
         return;
       }
 
@@ -130,20 +109,11 @@ function Tasks() {
             status: task.status,
           },
         ])
-        .select(`
-          *,
-          projects (
-            id,
-            name
-          )
-        `)
+        .select(`*, projects (id, name)`)
         .single();
 
       if (error) {
-        console.error(
-          "Error creating task:",
-          error
-        );
+        console.error("Error creating task:", error);
         setError("Unable to create task.");
         return;
       }
@@ -155,7 +125,6 @@ function Tasks() {
     setIsModalOpen(false);
   };
 
-  // Delete task
   const deleteTask = async (id) => {
     setError("");
 
@@ -165,10 +134,7 @@ function Tasks() {
       .eq("id", id);
 
     if (error) {
-      console.error(
-        "Error deleting task:",
-        error
-      );
+      console.error("Error deleting task:", error);
       setError("Unable to delete task.");
       return;
     }
@@ -178,13 +144,10 @@ function Tasks() {
     );
   };
 
-  // Toggle task status
   const toggleTask = async (id) => {
     setError("");
 
-    const task = tasks.find(
-      (item) => item.id === id
-    );
+    const task = tasks.find((item) => item.id === id);
 
     if (!task) return;
 
@@ -195,17 +158,9 @@ function Tasks() {
 
     const { data, error } = await supabase
       .from("tasks")
-      .update({
-        status: newStatus,
-      })
+      .update({ status: newStatus })
       .eq("id", id)
-      .select(`
-        *,
-        projects (
-          id,
-          name
-        )
-      `)
+      .select(`*, projects (id, name)`)
       .single();
 
     if (error) {
@@ -226,35 +181,65 @@ function Tasks() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">
-          Tasks
-        </h1>
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Tasks</h1>
 
-        <Button
-          onClick={() => setIsModalOpen(true)}
-        >
+          {!loading && (
+            <p className="mt-1 text-sm text-slate-500">
+              {tasks.length}{" "}
+              {tasks.length === 1 ? "task" : "tasks"} in your workspace
+            </p>
+          )}
+        </div>
+
+        <Button onClick={() => setIsModalOpen(true)}>
           + New Task
         </Button>
       </div>
 
+      {/* Search */}
       <TaskSearchBar
         value={search}
-        onChange={(e) =>
-          setSearch(e.target.value)
-        }
+        onChange={(e) => setSearch(e.target.value)}
       />
 
+      {/* Error */}
       {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {error}
         </div>
       )}
 
+      {/* Content */}
       {loading ? (
-        <p className="text-slate-500">
-          Loading tasks...
-        </p>
+        <div className="rounded-xl border bg-white p-8 text-center">
+          <p className="text-sm text-slate-500">
+            Loading tasks...
+          </p>
+        </div>
+      ) : filteredTasks.length === 0 ? (
+        <div className="rounded-xl border bg-white p-8 text-center">
+          <h2 className="text-lg font-semibold text-slate-800">
+            {search ? "No tasks found" : "No tasks yet"}
+          </h2>
+
+          <p className="mt-2 text-sm text-slate-500">
+            {search
+              ? "Try a different search term."
+              : "Create your first task to get started."}
+          </p>
+
+          {!search && (
+            <Button
+              className="mt-5"
+              onClick={() => setIsModalOpen(true)}
+            >
+              + Create Task
+            </Button>
+          )}
+        </div>
       ) : (
         <TaskList
           tasks={filteredTasks}
@@ -267,16 +252,18 @@ function Tasks() {
         />
       )}
 
-      <CreateTaskModal
-        open={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingTask(null);
-        }}
-        onCreate={saveTask}
-        editingTask={editingTask}
-        projects={projects}
-      />
+      {/* Modal */}
+     <CreateTaskModal
+  key={editingTask?.id ?? "new"}
+  open={isModalOpen}
+  onClose={() => {
+    setIsModalOpen(false);
+    setEditingTask(null);
+  }}
+  onCreate={saveTask}
+  editingTask={editingTask}
+  projects={projects}
+/>
     </div>
   );
 }

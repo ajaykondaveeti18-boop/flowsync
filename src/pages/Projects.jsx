@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
-
+import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
 import SearchBar from "../components/projects/SearchBar";
 import ProjectList from "../components/projects/ProjectList";
 import CreateProjectModal from "../components/projects/CreateProjectModal";
-
 import Button from "../components/ui/Button";
 
 function Projects() {
@@ -13,6 +11,7 @@ function Projects() {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -20,7 +19,6 @@ function Projects() {
     project.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Fetch projects
   useEffect(() => {
     async function getProjects() {
       setLoading(true);
@@ -45,7 +43,6 @@ function Projects() {
     getProjects();
   }, []);
 
-  // Create or update project
   const saveProject = async (project) => {
     setError("");
 
@@ -68,8 +65,8 @@ function Projects() {
       }
 
       setProjects((prev) =>
-        prev.map((item) =>
-          item.id === editingProject.id ? data : item
+        prev.map((p) =>
+          p.id === editingProject.id ? data : p
         )
       );
     } else {
@@ -108,7 +105,6 @@ function Projects() {
     setIsModalOpen(false);
   };
 
-  // Delete project
   const deleteProject = async (id) => {
     setError("");
 
@@ -130,27 +126,55 @@ function Projects() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-3xl font-bold">Projects</h1>
 
-        <Button onClick={() => setIsModalOpen(true)}>
+        <Button
+          onClick={() => {
+            setEditingProject(null);
+            setIsModalOpen(true);
+          }}
+        >
           + New Project
         </Button>
       </div>
 
+      {/* Search */}
       <SearchBar
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
 
+      {/* Error */}
       {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {error}
         </div>
       )}
 
+      {/* Loading */}
       {loading ? (
-        <p className="text-slate-500">Loading projects...</p>
+        <div className="rounded-xl border bg-white p-8 text-center">
+          <p className="text-sm text-slate-500">
+            Loading projects...
+          </p>
+        </div>
+      ) : filteredProjects.length === 0 ? (
+        /* Empty state */
+        <div className="rounded-xl border bg-white p-8 text-center">
+          <h2 className="text-lg font-semibold text-slate-800">
+            {search
+              ? "No projects found"
+              : "No projects yet"}
+          </h2>
+
+          <p className="mt-2 text-sm text-slate-500">
+            {search
+              ? "Try a different search term."
+              : "Create your first project to get started."}
+          </p>
+        </div>
       ) : (
         <ProjectList
           projects={filteredProjects}
@@ -162,15 +186,17 @@ function Projects() {
         />
       )}
 
-      <CreateProjectModal
-        open={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingProject(null);
-        }}
-        onCreate={saveProject}
-        editingProject={editingProject}
-      />
+      {/* Modal */}
+     <CreateProjectModal
+  key={editingProject?.id ?? "new"}
+  open={isModalOpen}
+  onClose={() => {
+    setIsModalOpen(false);
+    setEditingProject(null);
+  }}
+  onCreate={saveProject}
+  editingProject={editingProject}
+/>
     </div>
   );
 }
